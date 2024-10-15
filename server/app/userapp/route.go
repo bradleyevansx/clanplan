@@ -1,0 +1,5 @@
+package userapp
+
+func Routes(){
+	
+}
