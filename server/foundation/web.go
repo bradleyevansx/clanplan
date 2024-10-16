@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,34 +14,52 @@ type App struct {
 }
 
 func NewApp() *App{
-	e := gin.Default()
+	e := gin.New()
 	return &App{
 		Engine: e,
 	}
 }
 
 func (a *App) Start(){
-	a.Engine.Run()
-}
-
-func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc){
-	a.routeMethod(method, group, path, handlerFunc)
-}
-
-func (a *App) HandlerFuncNoMid(method string, group string, handlerFunc HandlerFunc){
-
-}
-
-func (a *App) routeMethod(method string, group string, path string, handlerFunc HandlerFunc){
-	path = group + path
-	switch method {
-	case "GET":
-		a.Engine.GET(path, func(c *gin.Context){
-			handlerFunc(c.Writer, c.Request)
-		})
-	case "POST":
-		a.Engine.POST(path, func(c *gin.Context){
-			handlerFunc(c.Writer, c.Request)
-		})
+	err := a.Engine.Run()
+	if err != nil {
+		panic(err)
 	}
+}
+func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
+    fullPath := group + path
+    a.routeMethod(method, fullPath, handlerFunc, mw...)
+}
+
+func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
+    fullPath := group + path
+    a.routeMethod(method, fullPath, handlerFunc)
+}
+
+func (a *App) routeMethod(method string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
+    handler := func(c *gin.Context) {
+        handlerFunc(c.Writer, c.Request)
+    }
+
+    if len(mw) > 0 {
+        handler = func(c *gin.Context) {
+            for _, m := range mw {
+                m(c)
+            }
+            handlerFunc(c.Writer, c.Request)
+        }
+    }
+
+    switch method {
+    case "GET":
+        a.Engine.GET(path, handler)
+    case "POST":
+        a.Engine.POST(path, handler)
+    case "PUT":
+        a.Engine.PUT(path, handler)
+    case "DELETE":
+        a.Engine.DELETE(path, handler)
+    default:
+        log.Printf("Unsupported method: %s", method)
+    }
 }

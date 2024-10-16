@@ -1,6 +1,7 @@
 package main
 
 import (
+	"clanplan/server/bus/sdk/nosqldb"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -25,8 +26,7 @@ func main() {
 			"See: " + docs +
 			"usage-examples/#environment-variable")
 	}
-	client, err := mongo.Connect(context.TODO(), options.Client().
-		ApplyURI(uri))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
@@ -36,8 +36,12 @@ func main() {
 			panic(err)
 		}
 	}()
+	dbClient := client.Database("clanplan")
+	mongoDb := nosqldb.NewDb(dbClient)
+	userCol := mongoDb.Collection("users")
 
-	coll := client.Database("sample_mflix").Collection("movies")
+
+	coll := dbClient.Collection("movies")
 	title := "Back to the Future"
 
 	var result bson.M
