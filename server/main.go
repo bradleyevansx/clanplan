@@ -1,15 +1,16 @@
 package main
 
 import (
+	"clanplan/server/bus/domain/userbus"
+	userdb "clanplan/server/bus/domain/userbus/stores"
 	"clanplan/server/bus/sdk/nosqldb"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -38,26 +39,36 @@ func main() {
 	}()
 	dbClient := client.Database("clanplan")
 	mongoDb := nosqldb.NewDb(dbClient)
-	userCol := mongoDb.Collection("users")
-
-
-	coll := dbClient.Collection("movies")
-	title := "Back to the Future"
-
-	var result bson.M
-	err = coll.FindOne(context.TODO(), bson.D{{"title", title}}).
-		Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the title %s\n", title)
-		return
-	}
+	userColl := mongoDb.Collection("users")
+	userRepo := userdb.NewStore(userColl)
+	// id := uuid.New()
+	// log.Printf("ID: %s\n", id)
+	// newUser := userbus.User{
+	// 	ID:       id,
+	// 	Username: "Test Create",
+	// 	Email: mail.Address{
+	// 		Address: "Test",
+	// 	},
+	// 	PasswordHash: []byte("Test"),
+	// 	Enabled:      true,
+	// 	DateCreated:  time.Now(),
+	// 	DateUpdated:  time.Now(),
+	// }
+	// err = userRepo.Insert(newUser)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	queryId, err := uuid.Parse("463507a9-11a7-4a01-8a9f-778c28c9609e")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
-	jsonData, err := json.MarshalIndent(result, "", "    ")
+	userFilter := userbus.QueryFilter{
+		ID: &queryId,
+	}
+	res, err := userRepo.Query(userFilter)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", jsonData)
+	fmt.Println(res)
+
 }
