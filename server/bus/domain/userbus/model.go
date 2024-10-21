@@ -17,6 +17,14 @@ type User struct {
 	DateUpdated  time.Time
 }
 type NewUser struct {
+	Username        string
+	Email           mail.Address
+	Password        string
+	PasswordConfirm string
 }
 type UpdateUser struct {
+	Username *string
+	Email    *mail.Address
+	Password *string
+	Enabled  *bool
 }

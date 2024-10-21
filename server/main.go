@@ -1,14 +1,13 @@
 package main
 
 import (
-	"clanplan/server/bus/domain/userbus"
 	userdb "clanplan/server/bus/domain/userbus/stores"
 	"clanplan/server/bus/sdk/nosqldb"
 	"context"
-	"fmt"
 	"log"
 	"os"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -40,12 +39,12 @@ func main() {
 	dbClient := client.Database("clanplan")
 	mongoDb := nosqldb.NewDb(dbClient)
 	userColl := mongoDb.Collection("users")
-	userRepo := userdb.NewStore(userColl)
+	ardanLog := logger.New(os.Stdout, logger.LevelInfo, "Store", nil)
+	userRepo := userdb.NewStore(userColl, ardanLog)
 	// id := uuid.New()
 	// log.Printf("ID: %s\n", id)
 	// newUser := userbus.User{
-	// 	ID:       id,
-	// 	Username: "Test Create",
+	// 	Username: "to receive id",
 	// 	Email: mail.Address{
 	// 		Address: "Test",
 	// 	},
@@ -54,21 +53,13 @@ func main() {
 	// 	DateCreated:  time.Now(),
 	// 	DateUpdated:  time.Now(),
 	// }
-	// err = userRepo.Insert(newUser)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	queryId, err := uuid.Parse("463507a9-11a7-4a01-8a9f-778c28c9609e")
+	// err = userRepo.Insert(context.TODO(), newUser)
+	idString := "2d850ba3-6bce-4b23-86a1-c53df3ec1901"
+	id := uuid.MustParse(idString)
+
+	_, err = userRepo.QueryById(context.TODO(), id)
 	if err != nil {
 		log.Fatal(err)
 	}
-	userFilter := userbus.QueryFilter{
-		ID: &queryId,
-	}
-	res, err := userRepo.Query(userFilter)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(res)
 
 }
