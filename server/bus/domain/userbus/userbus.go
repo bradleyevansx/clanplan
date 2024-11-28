@@ -59,6 +59,7 @@ func (b *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 	}
 	return usr, nil
 }
+
 func (b *Business) Query(ctx context.Context, filter QueryFilter) ([]User, error) {
 	usrs, err := b.storer.Query(ctx, filter)
 	if err != nil {

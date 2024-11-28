@@ -42,7 +42,6 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 	}
 
 	users, err := a.userBus.Query(ctx, filter)
-
 	if err != nil {
 		return errs.Newf(errs.Internal, "query: %s", err)
 	}
@@ -50,23 +49,31 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 	return query.NewResult(toAppUsers(users))
 }
 
-func (a *app) queryById(ctx context.Context, r *http.Request) web.Encoder {
+func (a *app) delete(ctx context.Context, r *http.Request) web.Encoder {
 	params, err := parseQueryParams(r)
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-  filter, err := parseFilter(params)
-  if err != nil {
-		return err.(errs.FieldErrors)
-  }
-
-	usr, err := a.userBus.QueryById(ctx, *filter.ID)
-
+	filter, err := parseFilter(params)
 	if err != nil {
-		return errs.Newf(errs.Internal, "query: %s", err)
+		return err.(errs.FieldErrors)
 	}
 
-  return toAppUser(usr)
+	err = a.userBus.Delete(ctx, filter)
+	if err != nil {
+		return errs.Newf(errs.Internal, "delete: %s", err)
+	}
+	return nil
+}
 
+func (a *app) insert(ctx context.Context, r *http.Request) web.Encoder {
+	var app NewUser
+
+	err := web.Decode(r, &app)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	nu, err := toBus(app)
 }

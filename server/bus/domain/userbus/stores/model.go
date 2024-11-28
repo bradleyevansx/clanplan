@@ -2,6 +2,7 @@ package userdb
 
 import (
 	"clanplan/server/bus/domain/userbus"
+	"clanplan/server/bus/types/name"
 	"net/mail"
 	"time"
 
@@ -21,7 +22,7 @@ type user struct {
 func toDbUser(u userbus.User) user {
 	db := user{
 		ID:           u.ID,
-		Username:     u.Username,
+		Username:     u.Username.String(),
 		Email:        u.Email.Address,
 		PasswordHash: u.PasswordHash,
 		Enabled:      u.Enabled,
@@ -32,9 +33,13 @@ func toDbUser(u userbus.User) user {
 }
 
 func toBusUser(u user) userbus.User {
+	name, err := name.Parse(u.Username)
+	if err != nil {
+		panic(err)
+	}
 	bus := userbus.User{
 		ID:           u.ID,
-		Username:     u.Username,
+		Username:     name,
 		Email:        mail.Address{Address: u.Email},
 		PasswordHash: u.PasswordHash,
 		Enabled:      u.Enabled,
@@ -43,8 +48,9 @@ func toBusUser(u user) userbus.User {
 	}
 	return bus
 }
+
 func toBusUsers(users []user) []userbus.User {
-	var busUsers = make([]userbus.User, 0, len(users))
+	busUsers := make([]userbus.User, 0, len(users))
 	for _, u := range users {
 		busUsers = append(busUsers, toBusUser(u))
 	}

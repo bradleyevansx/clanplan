@@ -2,7 +2,10 @@ package userapp
 
 import (
 	"clanplan/server/bus/domain/userbus"
+	"clanplan/server/bus/types/name"
 	"encoding/json"
+	"fmt"
+	"net/mail"
 	"time"
 )
 
@@ -49,4 +52,33 @@ func toAppUsers(users []userbus.User) []User {
 	}
 
 	return app
+}
+
+type NewUser struct {
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"password_confirm"`
+}
+
+func (app *NewUser) Decode(data []byte) error {
+	return json.Unmarshal(data, app)
+}
+
+func toNewBusUser(app NewUser) (userbus.NewUser, error) {
+	un, err := name.Parse(app.Password)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: ", err)
+	}
+
+	em, err := mail.ParseAddress(app.Email)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: ", err)
+	}
+
+	return userbus.NewUser{
+		Username: un,
+		Email:    *em,
+		Password: app.Password,
+	}, nil
 }

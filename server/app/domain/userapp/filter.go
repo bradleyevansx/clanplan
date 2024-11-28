@@ -36,13 +36,13 @@ func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 		filter.ID = &id
 	}
 
-  if qp.Username != "" {
-    name, err := name.Parse(qp.Username)
-    if err != nil {
-      return userbus.QueryFilter{}, errs.NewFieldsError("username", err)
-    }
-  }
-
+	if qp.Username != "" {
+		name, err := name.Parse(qp.Username)
+		if err != nil {
+			return userbus.QueryFilter{}, errs.NewFieldsError("username", err)
+		}
+		filter.Username = &name
+	}
 
 	if qp.Email != "" {
 		addr, err := mail.ParseAddress(qp.Email)

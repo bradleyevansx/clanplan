@@ -6,9 +6,13 @@ import (
 )
 
 type Config struct {
-	userbus *userbus.Business
+	Userbus *userbus.Business
 }
 
-func Routes(app *web.App){
-	
+func Routes(app *web.App, cfg Config) {
+	group := "v1"
+
+	api := newApp(cfg.Userbus)
+
+	app.HandlerFunc("GET", group, "/users/", api.query)
 }

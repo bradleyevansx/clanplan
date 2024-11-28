@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -11,21 +12,21 @@ type Encoder interface {
 	Encode() (data []byte, contentType string, err error)
 }
 
-type HandlerFunc func(r http.ResponseWriter, w *http.Request)
+type HandlerFunc func(ctx context.Context, r *http.Request) Encoder
 
-//App is a wrapper for the http server.
+// App is a wrapper for the http server.
 type App struct {
 	Engine *gin.Engine
 }
 
-func NewApp() *App{
+func NewApp() *App {
 	e := gin.New()
 	return &App{
 		Engine: e,
 	}
 }
 
-func (a *App) Start(){
+func (a *App) Start() {
 	err := a.Engine.Run()
 	if err != nil {
 		panic(err)
@@ -33,39 +34,48 @@ func (a *App) Start(){
 }
 
 func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
-    fullPath := group + path
-    a.routeMethod(method, fullPath, handlerFunc, mw...)
+	fullPath := group + path
+	a.routeMethod(method, fullPath, handlerFunc, mw...)
 }
 
 func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
-    fullPath := group + path
-    a.routeMethod(method, fullPath, handlerFunc)
+	fullPath := group + path
+	a.routeMethod(method, fullPath, handlerFunc)
 }
 
 func (a *App) routeMethod(method string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
-    handler := func(c *gin.Context) {
-        handlerFunc(c.Writer, c.Request)
-    }
+	handler := func(c *gin.Context) {
+		ctx := c.Request.Context()
+		encoder := handlerFunc(ctx, c.Request)
+		data, cT, err := encoder.Encode()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 
-    if len(mw) > 0 {
-        handler = func(c *gin.Context) {
-            for _, m := range mw {
-                m(c)
-            }
-            handlerFunc(c.Writer, c.Request)
-        }
-    }
+		c.Data(http.StatusOK, cT, data)
+	}
 
-    switch method {
-    case "GET":
-        a.Engine.GET(path, handler)
-    case "POST":
-        a.Engine.POST(path, handler)
-    case "PUT":
-        a.Engine.PUT(path, handler)
-    case "DELETE":
-        a.Engine.DELETE(path, handler)
-    default:
-        log.Printf("Unsupported method: %s", method)
-    }
+	if len(mw) > 0 {
+		handler = func(c *gin.Context) {
+			for _, m := range mw {
+				m(c)
+			}
+			ctx := c.Request.Context()
+			handlerFunc(ctx, c.Request)
+		}
+	}
+
+	switch method {
+	case "GET":
+		a.Engine.GET(path, handler)
+	case "POST":
+		a.Engine.POST(path, handler)
+	case "PUT":
+		a.Engine.PUT(path, handler)
+	case "DELETE":
+		a.Engine.DELETE(path, handler)
+	default:
+		log.Printf("Unsupported method: %s", method)
+	}
 }

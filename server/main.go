@@ -1,14 +1,16 @@
 package main
 
 import (
+	"clanplan/server/app/domain/userapp"
+	"clanplan/server/bus/domain/userbus"
 	userdb "clanplan/server/bus/domain/userbus/stores"
 	"clanplan/server/bus/sdk/nosqldb"
+	"clanplan/server/foundation/web"
 	"context"
 	"log"
 	"os"
 
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,6 +29,9 @@ func main() {
 			"usage-examples/#environment-variable")
 	}
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+
+	print("Client: ", client)
+
 	if err != nil {
 		panic(err)
 	}
@@ -41,25 +46,14 @@ func main() {
 	userColl := mongoDb.Collection("users")
 	ardanLog := logger.New(os.Stdout, logger.LevelInfo, "Store", nil)
 	userRepo := userdb.NewStore(userColl, ardanLog)
-	// id := uuid.New()
-	// log.Printf("ID: %s\n", id)
-	// newUser := userbus.User{
-	// 	Username: "to receive id",
-	// 	Email: mail.Address{
-	// 		Address: "Test",
-	// 	},
-	// 	PasswordHash: []byte("Test"),
-	// 	Enabled:      true,
-	// 	DateCreated:  time.Now(),
-	// 	DateUpdated:  time.Now(),
-	// }
-	// err = userRepo.Insert(context.TODO(), newUser)
-	idString := "2d850ba3-6bce-4b23-86a1-c53df3ec1901"
-	id := uuid.MustParse(idString)
+	userBus := userbus.NewBusiness(userRepo, ardanLog)
 
-	_, err = userRepo.QueryById(context.TODO(), id)
-	if err != nil {
-		log.Fatal(err)
-	}
+	app := web.NewApp()
 
+	cfg := userapp.Config{Userbus: userBus}
+
+	userapp.Routes(app, cfg)
+
+	//	idString := "2d850ba3-6bce-4b23-86a1-c53df3ec1901"
+	app.Start()
 }
