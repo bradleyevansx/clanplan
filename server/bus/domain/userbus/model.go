@@ -1,6 +1,7 @@
 package userbus
 
 import (
+	"clanplan/server/bus/types/name"
 	"net/mail"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 
 type User struct {
 	ID           uuid.UUID
-	Username     string
+	Username     name.Name
 	Email        mail.Address
 	PasswordHash []byte
 	Enabled      bool

@@ -7,8 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Encoder interface {
+	Encode() (data []byte, contentType string, err error)
+}
+
 type HandlerFunc func(r http.ResponseWriter, w *http.Request)
 
+//App is a wrapper for the http server.
 type App struct {
 	Engine *gin.Engine
 }
@@ -26,6 +31,7 @@ func (a *App) Start(){
 		panic(err)
 	}
 }
+
 func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
     fullPath := group + path
     a.routeMethod(method, fullPath, handlerFunc, mw...)

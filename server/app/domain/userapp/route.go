@@ -2,7 +2,7 @@ package userapp
 
 import (
 	"clanplan/server/bus/domain/userbus"
-	web "clanplan/server/foundation"
+	"clanplan/server/foundation/web"
 )
 
 type Config struct {

@@ -83,6 +83,57 @@ func (b *Business) QueryOne(ctx context.Context, filter QueryFilter) (User, erro
 	return usr, nil
 }
 
-func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) error {
+func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+	if uu.Password != nil {
+		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return User{}, fmt.Errorf("generatefrompassword: %w", err)
+		}
+		usr.PasswordHash = pw
+	}
 
+	if uu.Email != nil {
+		usr.Email = *uu.Email
+	}
+
+	if uu.Enabled != nil {
+		usr.Enabled = *uu.Enabled
+	}
+
+	if uu.Username != nil {
+		usr.Username = *uu.Username
+	}
+
+	if uu.Email != nil {
+		usr.Email = *uu.Email
+	}
+
+	usr.DateUpdated = time.Now()
+
+	if err := b.storer.Update(ctx, usr); err != nil {
+		return User{}, fmt.Errorf("update: %w", err)
+	}
+
+	return usr, nil
+}
+
+func (b *Business) DeleteById(ctx context.Context, userID uuid.UUID) error {
+	if err := b.storer.DeleteById(ctx, userID.String()); err != nil {
+		return fmt.Errorf("deletebyid: %w", err)
+	}
+	return nil
+}
+
+func (b *Business) Delete(ctx context.Context, filter QueryFilter) error {
+	if err := b.storer.Delete(ctx, filter); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+	return nil
+}
+
+func (b *Business) DeleteOne(ctx context.Context, filter QueryFilter) error {
+	if err := b.storer.DeleteOne(ctx, filter); err != nil {
+		return fmt.Errorf("deleteone: %w", err)
+	}
+	return nil
 }
