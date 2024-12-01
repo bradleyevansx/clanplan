@@ -15,4 +15,5 @@ func Routes(app *web.App, cfg Config) {
 	api := newApp(cfg.Userbus)
 
 	app.HandlerFunc("GET", group, "/users/", api.query)
+	app.HandlerFunc("DELETE", group, "/users/", api.delete)
 }

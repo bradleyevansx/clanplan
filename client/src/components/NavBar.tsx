@@ -21,7 +21,7 @@ const NavBar = () => {
         </button>
       </div>
       <div className="flex-1">
-        <a className="btn btn-ghost text-xl">ClanPlan</a>
+        <a className="btn btn-ghost text-xl">Vivace</a>
       </div>
       <div className="flex-none">
         <ThemeSelect></ThemeSelect>

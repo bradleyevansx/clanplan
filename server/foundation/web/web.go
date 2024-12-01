@@ -45,8 +45,15 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 
 func (a *App) routeMethod(method string, path string, handlerFunc HandlerFunc, mw ...gin.HandlerFunc) {
 	handler := func(c *gin.Context) {
+		for _, m := range mw {
+			m(c)
+		}
 		ctx := c.Request.Context()
 		encoder := handlerFunc(ctx, c.Request)
+		if encoder == nil {
+			c.Data(http.StatusOK, "application/json", []byte("{}"))
+			return
+		}
 		data, cT, err := encoder.Encode()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -54,16 +61,6 @@ func (a *App) routeMethod(method string, path string, handlerFunc HandlerFunc, m
 		}
 
 		c.Data(http.StatusOK, cT, data)
-	}
-
-	if len(mw) > 0 {
-		handler = func(c *gin.Context) {
-			for _, m := range mw {
-				m(c)
-			}
-			ctx := c.Request.Context()
-			handlerFunc(ctx, c.Request)
-		}
 	}
 
 	switch method {

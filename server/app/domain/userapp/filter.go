@@ -2,6 +2,7 @@ package userapp
 
 import (
 	"clanplan/server/bus/domain/userbus"
+	"fmt"
 	"net/http"
 	"net/mail"
 	"time"
@@ -15,12 +16,17 @@ func parseQueryParams(r *http.Request) (queryParams, error) {
 	values := r.URL.Query()
 
 	filter := queryParams{
+		Page:             values.Get("page"),
+		Row:              values.Get("row"),
+		Order:            values.Get("order"),
 		ID:               values.Get("user_id"),
 		Username:         values.Get("username"),
 		Email:            values.Get("email"),
-		StartCreatedDate: values.Get("start_created_date"),
-		EndCreatedDate:   values.Get("end_created_date"),
+		StartCreatedDate: values.Get("start_date_created"),
+		EndCreatedDate:   values.Get("end_date_created"),
 	}
+
+	fmt.Println(filter)
 
 	return filter, nil
 }
@@ -55,7 +61,7 @@ func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 	if qp.StartCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.StartCreatedDate)
 		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("start_created_date", err)
+			return userbus.QueryFilter{}, errs.NewFieldsError("start_date_created", err)
 		}
 		filter.StartCreatedDate = &t
 	}
@@ -63,7 +69,7 @@ func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 	if qp.EndCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.EndCreatedDate)
 		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("end_created_date", err)
+			return userbus.QueryFilter{}, errs.NewFieldsError("end_date_created", err)
 		}
 		filter.EndCreatedDate = &t
 	}

@@ -2,16 +2,26 @@ package userbus
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	ErrNotFound              = errors.New("user not found")
+	ErrUniqueEmail           = errors.New("email is not unique")
+	ErrAuthenticationFailure = errors.New("authentication failed")
+)
+
 type Storer interface {
-	Query(ctx context.Context, filter QueryFilter) ([]User, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+	Query(ctx context.Context, filter QueryFilter, order order.By, page page.Page) ([]User, error)
 	QueryById(ctx context.Context, id uuid.UUID) (User, error)
 	QueryOne(ctx context.Context, filter QueryFilter) (User, error)
 	DeleteById(ctx context.Context, id string) error
@@ -60,8 +70,16 @@ func (b *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 	return usr, nil
 }
 
-func (b *Business) Query(ctx context.Context, filter QueryFilter) ([]User, error) {
-	usrs, err := b.storer.Query(ctx, filter)
+func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	count, err := b.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("count: %w", err)
+	}
+	return count, nil
+}
+
+func (b *Business) Query(ctx context.Context, filter QueryFilter, order order.By, page page.Page) ([]User, error) {
+	usrs, err := b.storer.Query(ctx, filter, order, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

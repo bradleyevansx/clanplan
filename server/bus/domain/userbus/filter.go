@@ -12,6 +12,6 @@ type QueryFilter struct {
 	ID               *uuid.UUID    `bson:"_id"`
 	Username         *name.Name    `bson:"name"`
 	Email            *mail.Address `bson:"email"`
-	StartCreatedDate *time.Time    `bson:"date_created"`
-	EndCreatedDate   *time.Time    `bson:"date_created"`
+	StartCreatedDate *time.Time    `bson:"start_date_created"`
+	EndCreatedDate   *time.Time    `bson:"end_date_created"`
 }

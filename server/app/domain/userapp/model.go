@@ -10,6 +10,9 @@ import (
 )
 
 type queryParams struct {
+	Page             string
+	Row              string
+	Order            string
 	ID               string
 	Username         string
 	Email            string
